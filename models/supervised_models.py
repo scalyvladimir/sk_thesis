@@ -115,11 +115,11 @@ class LitDeepLabV2(pl.LightningModule):
         src_mask = val_batch['src']['mask'].squeeze(1)        
         loss_seg_src = self.model.CrossEntropy2d(src_out, src_mask)
         
-        if batch_idx == 0:
+        if batch_idx == 50:
             
             self.log_grid(
                 val_batch['src']['img'],
-                val_batch['src']['mask'],
+                val_batch['src']['mask'].float(),
                 src_out,
                 tag='source val',
                 topn=3
@@ -146,11 +146,11 @@ class LitDeepLabV2(pl.LightningModule):
         total_loss = loss_seg_src + self.ent_lambda * loss_ent_tgt
         self.log('val_loss', total_loss)
 
-        if batch_idx == 0:
+        if batch_idx == 50:
 
             self.log_grid(
                 val_batch['tgt']['img'],
-                val_batch['tgt']['mask'],
+                val_batch['tgt']['mask'].float(),
                 tgt_out,
                 tag='target val',
                 topn=3
