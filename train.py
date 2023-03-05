@@ -47,8 +47,8 @@ model = LitDeepLabV2(
 )
 
 wb_logger = pl.loggers.WandbLogger(
-    name='{}_BS={}| N_EPOCHS={}| beta={:.3f}'.format(
-        params_dict['logger'],
+    name='{}_BS={}| N_EPOCHS={}| beta={:.2f}'.format(
+        params_dict['logger']['name'],
         params_dict['data']['batch_size'],
         params_dict['n_epochs'],
         params_dict['model']['beta']
@@ -57,7 +57,7 @@ wb_logger = pl.loggers.WandbLogger(
 )
 
 checkpoint_callback = ModelCheckpoint(
-    filename='sup_model_beta={:.3f}'.format(params_dict['model']['beta']),
+    filename='sup_model_beta={:.2f}'.format(params_dict['model']['beta']),
     **params_dict['checkpoint']
 )
 
