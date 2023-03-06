@@ -66,11 +66,6 @@ class LitDeepLabV2(pl.LightningModule):
         
         return out
     
-    def configure_optimizers(self):
-        optimizer = SGD(self.model.parameters(), lr=2.5e-4, weight_decay=5e-4)
-        scheduler = StepLR(optimizer, gamma=0.9, step_size=self.n_epochs//3)
-        return [optimizer], [scheduler]
-    
     def training_step(self, train_batch, batch_idx):
 
         b_size = train_batch['tgt']['img'].shape[0]
@@ -170,6 +165,11 @@ class LitDeepLabV2(pl.LightningModule):
             )
 
             self.logger.log_image(tag, [grid], self.global_step)
+
+    def configure_optimizers(self):
+        optimizer = SGD(self.model.parameters(), lr=2.5e-4, weight_decay=5e-4)
+        scheduler = StepLR(optimizer, gamma=0.9, step_size=self.n_epochs//3)
+        return [optimizer], [scheduler]
 
     # def predict_step(self, batch, batch_idx, dataloader_idx=0):
     #     return torch.argmax(self.sm(self(batch)), dim=1)

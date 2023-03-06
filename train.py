@@ -57,7 +57,10 @@ wb_logger = pl.loggers.WandbLogger(
 )
 
 checkpoint_callback = ModelCheckpoint(
-    filename='sup_model_beta={:.2f}'.format(params_dict['model']['beta']),
+    filename='{}_beta={:.2f}'.format(
+        params_dict['logger']['name'],
+        params_dict['model']['beta'],
+    ),
     **params_dict['checkpoint']
 )
 

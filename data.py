@@ -3,6 +3,8 @@ from torch.utils.data import Dataset, DataLoader, Subset
 import pandas as pd
 from PIL import Image
 
+from models.supervised_models import LitDeepLabV2
+
 class SegmentationDataset(Dataset):
     def __init__(self, dataframe_path, transform=None, mask_transform=None):
         super().__init__()
@@ -55,3 +57,29 @@ def get_train_test_split_loaders(dataset, batch_size, test_size):
     )
 
     return train_loader, test_loader
+    
+class SegmentationPseudoDataset(Dataset):
+    def __init__(self, dataframe_path, transform=None, mask_transform=None):
+        super().__init__()
+
+        self.transform = transform
+        self.mask_transform = mask_transform
+
+        self.df = pd.read_csv(dataframe_path)
+
+        self.models_list = [LitDeepLabV2.load_from_checkpoint(f'pretrained/deeplab_v2/model{i}.ckpt') for i in range(1, 4)]
+
+    def __len__(self):
+        return len(self.df)
+        
+    def __getitem__(self, index):
+        img = Image.open(self.df.iloc[index]['img'])
+        mask = Image.open(self.df.iloc[index]['mask'])
+        
+        if self.transform is not None:
+            img = self.transform(img)
+        
+        if self.mask_transform is not None:
+            mask = self.mask_transform(mask).long()
+
+        return {'img': img, 'mask': mask}
