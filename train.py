@@ -10,7 +10,7 @@ from models.supervised_models import LitDeepLabV2
 import yaml
 
 
-with open('train.yaml') as f:
+with open('configs/train.yaml') as f:
     params_dict = yaml.safe_load(f)
     
 print(params_dict)

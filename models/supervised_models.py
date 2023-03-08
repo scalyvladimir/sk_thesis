@@ -84,14 +84,18 @@ class LitDeepLabV2(pl.LightningModule):
         del src_out
         del src_mask_ohe
 
-        # tgt forward
-        tgt_out = self.forward(train_batch['tgt']['img'])
+        # pseudo forward
+        ps_out = self.forward(train_batch['tgt']['img'])
+        ps_mask = train_batch['tgt']['pseudo_mask'].squeeze(1)        
+        loss_seg_ps = self.model.CrossEntropy2d(ps_out, ps_mask)
+
+        ps_out = self.forward(train_batch['tgt']['img'])
         # trigger entropy after 50.000th step
-        loss_ent_tgt = self.entropy_loss(tgt_out) if self.global_step > 50000 else 0.     
+        loss_ent_tgt = self.entropy_loss(ps_out) if self.global_step > 50000 else 0.     
 
         self.log('train_miou', self.train_miou, on_step=False, on_epoch=True)
 
-        total_loss = loss_seg_src + self.ent_lambda * loss_ent_tgt
+        total_loss = loss_seg_src + loss_seg_ps + self.ent_lambda * loss_ent_tgt
         self.log('train_loss', total_loss)
         
         return total_loss
@@ -121,24 +125,25 @@ class LitDeepLabV2(pl.LightningModule):
             )
         del src_out
         
-        # tgt forward
-        tgt_mask = val_batch['tgt']['mask'].squeeze(1)  
+        # pseudo forward
+        ps_mask = val_batch['tgt']['pseudo_mask'].squeeze(1)  
 
-        tgt_out = self.forward(val_batch['tgt']['img'])
+        ps_out = self.forward(val_batch['tgt']['img'])
+        loss_seg_ps = self.model.CrossEntropy2d(ps_out, ps_mask)
         
         # trigger entropy after 50.000th step
-        loss_ent_tgt = self.entropy_loss(tgt_out) if self.global_step > 50000 else 0.
+        loss_ent_tgt = self.entropy_loss(ps_out) if self.global_step > 50000 else 0.
         
         # Bx1xHxW -> BxHxW -> BxHxWxC -> BxCxHxW       
-        tgt_mask_ohe = F.one_hot(tgt_mask, self.num_classes).permute(0, 3, 1, 2)
-        self.val_miou(preds=F.softmax(tgt_out, dim=1), target=tgt_mask_ohe)
+        tgt_mask_ohe = F.one_hot(ps_mask, self.num_classes).permute(0, 3, 1, 2)
+        self.val_miou(preds=F.softmax(ps_out, dim=1), target=tgt_mask_ohe)
         del tgt_mask_ohe
 
         self.log('val_miou', self.val_miou, on_step=False, on_epoch=True)
         
         # loss_seg_src, _ = self.compute_total_loss(src_mask, src_out, tgt_out)
 
-        total_loss = loss_seg_src + self.ent_lambda * loss_ent_tgt
+        total_loss = loss_seg_src + loss_seg_ps + self.ent_lambda * loss_ent_tgt
         self.log('val_loss', total_loss)
 
         if batch_idx == 50:
@@ -146,7 +151,7 @@ class LitDeepLabV2(pl.LightningModule):
             self.log_grid(
                 val_batch['tgt']['img'],
                 val_batch['tgt']['mask'].float(),
-                tgt_out,
+                ps_out,
                 tag='target val',
                 topn=3
             )

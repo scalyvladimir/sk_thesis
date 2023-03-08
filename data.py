@@ -67,19 +67,19 @@ class SegmentationPseudoDataset(Dataset):
 
         self.df = pd.read_csv(dataframe_path)
 
-        self.models_list = [LitDeepLabV2.load_from_checkpoint(f'pretrained/deeplab_v2/model{i}.ckpt') for i in range(1, 4)]
-
     def __len__(self):
         return len(self.df)
         
     def __getitem__(self, index):
         img = Image.open(self.df.iloc[index]['img'])
         mask = Image.open(self.df.iloc[index]['mask'])
+        ps_mask = Image.open(self.df.iloc[index]['pseudo_mask'])
         
         if self.transform is not None:
             img = self.transform(img)
         
         if self.mask_transform is not None:
             mask = self.mask_transform(mask).long()
+            ps_mask = self.mask_transform(ps_mask).long()
 
-        return {'img': img, 'mask': mask}
+        return {'img': img, 'mask': mask, 'pseudo_mask': ps_mask}
