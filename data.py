@@ -1,18 +1,19 @@
-from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader, Subset
 import pandas as pd
 from PIL import Image
-
-from models.supervised_models import LitDeepLabV2
+from torchvision import transforms as TT
+import torchvision.transforms.functional as TF
 
 class SegmentationDataset(Dataset):
-    def __init__(self, dataframe_path, transform=None, mask_transform=None):
+    def __init__(self, dataframe, transform=None, mask_transform=None, mode='train'):
         super().__init__()
 
         self.transform = transform
         self.mask_transform = mask_transform
 
-        self.df = pd.read_csv(dataframe_path)
+        self.df = dataframe.reset_index()
+        self.mode = mode
 
     def __len__(self):
         return len(self.df)
@@ -20,30 +21,42 @@ class SegmentationDataset(Dataset):
     def __getitem__(self, index):
         img = Image.open(self.df.iloc[index]['img'])
         mask = Image.open(self.df.iloc[index]['mask'])
-        
+
+        img = TT.ToTensor()(img)
+        mask = (TT.PILToTensor()(mask) / 255).long()
+
+        if self.mode == 'train':
+            i, j, h, w = TT.RandomCrop.get_params(
+                img, output_size=(160, 160))
+            img = TF.crop(img, i, j, h, w)
+            mask = TF.crop(mask, i, j, h, w)
+            
         if self.transform is not None:
             img = self.transform(img)
-        
-        if self.mask_transform is not None:
-            mask = self.mask_transform(mask).long()
+            mask = self.transform(mask)
 
         return {'img': img, 'mask': mask}
     
 
-def get_train_test_split_loaders(dataset, batch_size, test_size):
+def get_train_test_split_loaders(data_dict, train_transform=None, test_transform=None):
 
-    train_idx, test_idx = train_test_split(
-        range(len(dataset)),
-        test_size=test_size,
-        shuffle=False#True
+    df = pd.read_csv(data_dict['data_path'])
+
+    train_subset = SegmentationDataset(
+        df[~df['file_id'].isin(data_dict['exclude_scans_list'])],
+        transform=train_transform,
+        mode='train'
     )
 
-    train_subset = Subset(dataset, train_idx)
-    test_subset = Subset(dataset, test_idx)
+    test_subset = SegmentationDataset(
+        df[df['file_id'].isin(data_dict['exclude_scans_list'])],
+        transform=test_transform,
+        mode='test'
+    )
 
     train_loader = DataLoader(
         train_subset,
-        batch_size=batch_size, 
+        batch_size=data_dict['batch_size'], 
         pin_memory=True,
         num_workers=40,
         shuffle=True
@@ -51,7 +64,7 @@ def get_train_test_split_loaders(dataset, batch_size, test_size):
     
     test_loader = DataLoader(
         test_subset,
-        batch_size=batch_size, 
+        batch_size=1, 
         pin_memory=True,
         num_workers=40
     )

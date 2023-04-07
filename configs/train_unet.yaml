@@ -1,0 +1,27 @@
+data: 
+  # data_path: /home/v_chernyy/thesis/dataframes/philips3_cleaned.csv /home/v_chernyy/thesis/dataframes/philips3_cleaned.csv #/raid/data/DA_BrainDataset/siemens3/df_save.csv # /raid/data/DA_BrainDataset/philips3/df_save.csv
+  data_path: /home/v_chernyy/thesis/dataframes/philips3_cleaned.csv #/raid/data/DA_BrainDataset/philips3/df_save.csv
+  batch_size: 50
+  exclude_scans_list: [CC0118, CC0119]
+
+model:
+  n_chans_in: 1
+  n_chans_out: 1
+
+trainer:
+    max_epochs: 100
+    accelerator: gpu
+    devices: [2]
+    benchmark: true
+    # limit_train_batches: 100
+    check_val_every_n_epoch: 2
+    enable_checkpointing: true
+
+checkpoint:
+  dirpath: checkpoints
+#   monitor: val_miou
+#   mode: max
+
+logger:
+  name: philips_debug
+  project: thesis

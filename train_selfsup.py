@@ -1,5 +1,5 @@
 from torchvision import transforms as TT
-from data import SegmentationDataset, get_train_test_split_loaders
+from data import SegmentationDataset, SegmentationPseudoDataset, get_train_test_split_loaders
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -10,7 +10,7 @@ from models.supervised_models import LitDeepLabV2
 import yaml
 
 
-with open('configs/train.yaml') as f:
+with open('configs/train_selfsup.yaml') as f:
     params_dict = yaml.safe_load(f)
     
 print(params_dict)
@@ -19,22 +19,18 @@ transforms = TT.Compose([
     TT.ToTensor()
 ])
 
-mask_transforms = TT.Compose([
-    TT.PILToTensor()
-])
-
 # SIEMENS_PATH
 dataset_A = SegmentationDataset(
     dataframe_path = params_dict['src_path'],
     transform=transforms,
-    mask_transform=mask_transforms
+    mask_transform=transforms
 )
 
 # PHILIPS_PATH
-dataset_B = SegmentationDataset(
+dataset_B = SegmentationPseudoDataset(
     dataframe_path = params_dict['tgt_path'],
     transform=transforms,
-    mask_transform=mask_transforms
+    mask_transform=transforms
 )
 
 trainA_loader, testA_loader = get_train_test_split_loaders(
@@ -51,11 +47,10 @@ model = LitDeepLabV2(
 )
 
 wb_logger = pl.loggers.WandbLogger(
-    name='{}_BS={}| N_EPOCHS={}| beta={:.2f}'.format(
+    name='{}_BS={}| N_EPOCHS={}'.format(
         params_dict['logger']['name'],
         params_dict['data']['batch_size'],
-        params_dict['n_epochs'],
-        params_dict['model']['beta']
+        params_dict['n_epochs']
         ),
     project=params_dict['logger']['project']
 )

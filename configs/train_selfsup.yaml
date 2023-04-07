@@ -12,7 +12,7 @@ model:
 
 data: 
   test_size: 2.e-1
-  batch_size: 20
+  batch_size: 15
 
 checkpoint:
   dirpath: checkpoints
@@ -20,5 +20,5 @@ checkpoint:
   mode: max
 
 logger:
-  name: long_DeepLab self-supervised
+  name: long_DeepLab self-supervised_fixed
   project: FDA

@@ -1,12 +1,12 @@
-src_path: /raid/data/DA_BrainDataset/siemens3/df_save.csv
-tgt_path: /raid/data/DA_BrainDataset/philips3/df_save.csv
+src_path: /home/v_chernyy/thesis/dataframes/siemens3_cleaned.csv # /raid/data/DA_BrainDataset/siemens3/df_save.csv
+tgt_path: /home/v_chernyy/thesis/dataframes/philips3_cleaned.csv # /raid/data/DA_BrainDataset/philips3/df_save.csv
 
 n_epochs: 200
 gpu_id: [1]
 
 model:
   num_classes: 2
-  beta: 1.e-2
+  beta: 5.e-2 # 1, 9
   ent_lambda: 5.e-3
   eta: 2.0
 
@@ -20,5 +20,5 @@ checkpoint:
   mode: max
 
 logger:
-  name: long_DeepLab supervised
+  name: new_Supervised
   project: FDA
