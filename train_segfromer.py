@@ -12,10 +12,10 @@ import json
 
 import sys
 
-with open('configs/train_segformer3.yaml') as f:
+with open('configs/train_segformer.yaml') as f:
     params_dict = yaml.safe_load(f)
     
-print(params_dict)
+# print(params_dict)
 
 # train_transform = (
 #     TT.Compose([
@@ -68,26 +68,28 @@ model = LitSegNet(
     backbone=backbone
 )
 
+domain = params_dict['data']['data_path'].split('/')[-1].split('.')[0]
+
 wb_logger = pl.loggers.WandbLogger(
     name='{}_BS={}| N_EPOCHS={}'.format(
-        params_dict['logger']['name'],
+        f'{domain}_segformer3',
         params_dict['data']['batch_size'],
         params_dict['trainer']['max_epochs']
         ),
-    project=params_dict['logger']['project'],
+    project='thesis',
     log_model='all'
 )
 
 checkpoint_callback = ModelCheckpoint(
     filename='{}'.format(
-        params_dict['logger']['name'],
+        f'{domain}_segformer'
     ),
     **params_dict['checkpoint']
 )
 
 es_callback = EarlyStopping(
     monitor='val Surface Dice',
-    min_delta=1.,
+    min_delta=5.,
     patience=20,
     mode='max'
 )

@@ -19,10 +19,10 @@ from tqdm import tqdm
 import yaml
 import os
 
-with open('configs/infer_unet.yaml') as f:
+with open('configs/infer_segformer.yaml') as f:
     params_dict = yaml.safe_load(f)
     
-print(params_dict)
+# print(params_dict)
 
 test_transform = None
 
@@ -74,7 +74,7 @@ with torch.no_grad():
     df_from = chkpt_name.split('_')[0]
     df_to = params_dict['data']['data_path'].split('/')[-1].split('.')[0]
 
-    df_path = 'inference_results/unet.csv'
+    df_path = 'inference_results/{}.csv'.format(params_dict['data']['save_filename'])
 
     if os.path.isfile(df_path):
         df = pd.read_csv(df_path, index_col=0)

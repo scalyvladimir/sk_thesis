@@ -1,0 +1,7 @@
+data:
+  data_path: /home/v_chernyy/thesis/dataframes/ge15.csv
+  save_filename: segformer
+gpu_id: 0
+model:
+  checkpoint_path: checkpoints/ge15_segformer.ckpt
+  num_classes: 1

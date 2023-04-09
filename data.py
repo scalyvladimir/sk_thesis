@@ -43,13 +43,13 @@ def get_train_test_split_loaders(data_dict, train_transform=None, test_transform
     df = pd.read_csv(data_dict['data_path'])
 
     train_subset = SegmentationDataset(
-        df[~df['file_id'].isin(data_dict['exclude_scans_list'])],
+        df[df['fold'] == 'train'],
         transform=train_transform,
         mode='train'
     )
 
     test_subset = SegmentationDataset(
-        df[df['file_id'].isin(data_dict['exclude_scans_list'])],
+        df[df['fold'] == 'test'],
         transform=test_transform,
         mode='test'
     )

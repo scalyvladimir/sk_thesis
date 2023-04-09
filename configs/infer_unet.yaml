@@ -1,11 +1,6 @@
+data:
+  data_path: /home/v_chernyy/thesis/dataframes/philips15.csv
 gpu_id: 0
-
-data: 
-  data_path: /home/v_chernyy/thesis/dataframes/siemens3_cleaned.csv # /raid/data/DA_BrainDataset/philips3/df_save.csv /raid/data/DA_BrainDataset/siemens3/df_save.csv 
-  # tgt_path: /raid/data/DA_BrainDataset/philips3/df_save.csv /home/v_chernyy/thesis/dataframes/philips3_cleaned.csv
-  batch_size: 1
-  exclude_scans_list: [CC0238, CC0239] # p[CC0118, CC0119]
-
 model:
+  checkpoint_path: checkpoints/ge15_unet.ckpt
   num_classes: 1
-  checkpoint_path: checkpoints/philips3_some_unet.ckpt

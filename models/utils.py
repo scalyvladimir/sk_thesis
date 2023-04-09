@@ -6,6 +6,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+from imops import pad_to_divisible
+
 # def calculate_2dft(input):
 #     ft = torch.fft.ifftshift(input)
 #     ft = torch.fft.fft2(ft)
@@ -82,3 +84,24 @@ def beta_transform(img_src, img_tgt, beta, show=False):
         axes[2].axis('off')
 
     return res
+
+def pad_tensor(t):
+    padded_t = pad_to_divisible(
+        t, 
+        torch.tensor([8, 8]),
+        torch.tensor([2, 3]),
+        np.min, 
+        torch.tensor([0.5, 0.5])
+    )
+    
+    return padded_t
+
+def unpad_tensor(padded_t, old_t):
+
+    old_shape, new_shape = np.array(padded_t.shape), np.array(old_t.shape)
+
+    start = ((old_shape - new_shape) * [0, 0, 0.5, 0.5]).astype(int)
+
+    cropped_t = padded_t[tuple(map(slice, start, start + new_shape))]
+    
+    return cropped_t

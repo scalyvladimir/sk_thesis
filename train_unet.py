@@ -47,37 +47,42 @@ trainA_loader, testA_loader = get_train_test_split_loaders(
     # test_transform=None
 )
 
+print(params_dict['data']['batch_size'])
+
 # trainB_loader, testB_loader = get_train_test_split_loaders(
 #     dataset_B, batch_size=params_dict['data']['batch_size'], test_size=0.2
 # )
 
 model = LitSegNet(
     n_epochs=params_dict['trainer']['max_epochs'],
+    num_classes=1,
     backbone=UNet2D(
         **params_dict['model']
     )
 )
 
+domain = params_dict['data']['data_path'].split('/')[-1].split('.')[0]
+
 wb_logger = pl.loggers.WandbLogger(
     name='{}_BS={}| N_EPOCHS={}'.format(
-        params_dict['logger']['name'],
+        f'{domain}_unet',
         params_dict['data']['batch_size'],
         params_dict['trainer']['max_epochs']
         ),
-    project=params_dict['logger']['project'],
+    project='thesis',
     log_model='all'
 )
 
 checkpoint_callback = ModelCheckpoint(
     filename='{}'.format(
-        params_dict['logger']['name'],
+        f'{domain}_unet'
     ),
     **params_dict['checkpoint']
 )
 
 es_callback = EarlyStopping(
     monitor='val Surface Dice',
-    min_delta=1.,
+    min_delta=5.,
     patience=20,
     mode='max'
 )
