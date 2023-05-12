@@ -1,0 +1,29 @@
+data: 
+  df_from:
+    data_path: /home/v_chernyy/thesis/dataframes/ge3.csv
+    batch_size: 10
+  df_to:
+    data_path: /home/v_chernyy/thesis/dataframes/philips15.csv
+    batch_size: 10
+
+model:
+  buffer_size: 50
+  is_train: true
+  use_idt: true
+
+trainer:
+    max_epochs: 100
+    accelerator: gpu
+    devices: [2]
+    benchmark: true
+    limit_train_batches: 100
+    check_val_every_n_epoch: 2
+    enable_checkpointing: true
+
+version: cycgan+idt_loss
+
+# checkpoint:
+#   dirpath: checkpoints
+#   save_top_k: 1
+#   monitor: val Surface Dice
+#   mode: max
