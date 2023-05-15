@@ -1,10 +1,10 @@
 data: 
+  batch_size: 10
+
   df_from:
-    data_path: /home/v_chernyy/thesis/dataframes/ge3.csv
-    batch_size: 10
+    data_path: /home/v_chernyy/thesis/dataframes/ge15.csv
   df_to:
-    data_path: /home/v_chernyy/thesis/dataframes/philips15.csv
-    batch_size: 10
+    data_path: /home/v_chernyy/thesis/dataframes/siemens3.csv
 
 model:
   buffer_size: 50
@@ -14,16 +14,16 @@ model:
 trainer:
     max_epochs: 100
     accelerator: gpu
-    devices: [2]
+    devices: [0]
     benchmark: true
     limit_train_batches: 100
     check_val_every_n_epoch: 2
     enable_checkpointing: true
 
-version: cycgan+idt_loss
+version: lr_debug
 
-# checkpoint:
-#   dirpath: checkpoints
-#   save_top_k: 1
+checkpoint:
+  dirpath: checkpoints
+  save_top_k: 1
 #   monitor: val Surface Dice
 #   mode: max

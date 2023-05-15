@@ -8,6 +8,8 @@ import torch.nn as nn
 import torchvision
 import torch
 
+from torch.optim.lr_scheduler import SequentialLR, ConstantLR, PolynomialLR
+
 import functools 
 
 from .utils import init_func
@@ -17,6 +19,12 @@ from .loss import GANLoss
 import itertools
 
 import random
+
+import sys
+
+sys.path.append('/home/v_chernyy/thesis')
+
+from models.utils import pad_tensor
 
 class GAN(pl.LightningModule):
     def __init__(
@@ -77,6 +85,8 @@ class GAN(pl.LightningModule):
         self.buffer_B = None
 
         self.buffer_size = buffer_size
+
+        self.automatic_optimization = False
 
     def forward(self, batch):
         batch_from, batch_to = batch
@@ -152,19 +162,21 @@ class GAN(pl.LightningModule):
         self.forward(batch)      # compute fake images and reconstruction images.
         
         optimizer_g, optimizer_d = self.optimizers()
+        scheduler_g, scheduler_d = self.lr_schedulers()
 
         # G_A and G_B
         self.set_requires_grad([self.disc_A, self.disc_B], False)  # Ds require no gradients when optimizing Gs
-        self.toggle_optimizer(optimizer_g, 0)
+        self.toggle_optimizer(optimizer_g)
         optimizer_g.zero_grad()  # set G_A and G_B's gradients to zero
         g_loss = self.gen_loss(batch_from['img'], batch_to['img']) # compute generator loss
         self.manual_backward(g_loss)             # calculate gradients for G_A and G_B
         optimizer_g.step()       # update G_A and G_B's weights
+        scheduler_g.step()
         self.untoggle_optimizer(optimizer_g)
         
         # D_A and D_B
         self.set_requires_grad([self.disc_A, self.disc_B], True)
-        self.toggle_optimizer(optimizer_d, 1)
+        self.toggle_optimizer(optimizer_d)
         optimizer_d.zero_grad()   # set D_A and D_B's gradients to zero
 
         ret_fake_B = []
@@ -214,13 +226,35 @@ class GAN(pl.LightningModule):
         self.manual_backward(d_loss_B) # calculate graidents for D_B
               
         optimizer_d.step()  # update D_A and D_B's weights
+        scheduler_d.step()
         self.untoggle_optimizer(optimizer_d)
 
     def configure_optimizers(self):
 
         opt_g = torch.optim.Adam(itertools.chain(self.gen_A.parameters(), self.gen_B.parameters()), betas=(0.5, 0.999), lr=0.0002)
         opt_d = torch.optim.Adam(itertools.chain(self.disc_A.parameters(), self.disc_B.parameters()), betas=(0.5, 0.999), lr=0.0002)
-        return [opt_g, opt_d], []
+
+        milestones = [self.trainer.max_epochs // 2]
+
+        lr_scheduler_g = SequentialLR(
+            opt_g,
+            schedulers=[
+                    ConstantLR(opt_g, factor=1., total_iters=self.trainer.max_epochs // 2),
+                    PolynomialLR(opt_g, total_iters=self.trainer.max_epochs // 2)
+                ],
+            milestones=milestones
+        )
+
+        lr_scheduler_d = SequentialLR(
+            opt_d,
+            schedulers=[
+                    ConstantLR(opt_d, factor=1., total_iters=self.trainer.max_epochs // 2),
+                    PolynomialLR(opt_d, total_iters=self.trainer.max_epochs // 2)
+                ],
+            milestones=milestones
+        )
+        
+        return [opt_g, opt_d], [lr_scheduler_g, lr_scheduler_d]
 
     def validation_step(self, batch, batch_idx):
         batch_from, batch_to = batch
@@ -247,3 +281,15 @@ class GAN(pl.LightningModule):
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
+
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        batch_from, batch_to = batch
+
+        batch_from['img'] = torch.tensor(pad_tensor(batch_from['img'].cpu())).to(self.device)
+        batch_to['img'] = torch.tensor(pad_tensor(batch_to['img'].cpu())).to(self.device)
+
+        fake_B = self.gen_A(batch_from['img'])
+        fake_A = self.gen_B(batch_to['img'])
+        
+        return fake_B, fake_A
+
