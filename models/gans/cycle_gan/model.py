@@ -162,7 +162,6 @@ class GAN(pl.LightningModule):
         self.forward(batch)      # compute fake images and reconstruction images.
         
         optimizer_g, optimizer_d = self.optimizers()
-        scheduler_g, scheduler_d = self.lr_schedulers()
 
         # G_A and G_B
         self.set_requires_grad([self.disc_A, self.disc_B], False)  # Ds require no gradients when optimizing Gs
@@ -171,7 +170,6 @@ class GAN(pl.LightningModule):
         g_loss = self.gen_loss(batch_from['img'], batch_to['img']) # compute generator loss
         self.manual_backward(g_loss)             # calculate gradients for G_A and G_B
         optimizer_g.step()       # update G_A and G_B's weights
-        scheduler_g.step()
         self.untoggle_optimizer(optimizer_g)
         
         # D_A and D_B
@@ -226,8 +224,13 @@ class GAN(pl.LightningModule):
         self.manual_backward(d_loss_B) # calculate graidents for D_B
               
         optimizer_d.step()  # update D_A and D_B's weights
-        scheduler_d.step()
         self.untoggle_optimizer(optimizer_d)
+
+    def on_train_epoch_end(self):
+        scheduler_g, scheduler_d = self.lr_schedulers()
+
+        scheduler_g.step()
+        scheduler_d.step()
 
     def configure_optimizers(self):
 
