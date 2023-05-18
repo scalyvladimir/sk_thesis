@@ -1,6 +1,7 @@
 # from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset, DataLoader, Subset
 import pandas as pd
+import numpy as np
 from PIL import Image
 from torchvision import transforms as TT
 import torchvision.transforms.functional as TF
@@ -22,7 +23,7 @@ class SegmentationDataset(Dataset):
         img = Image.open(self.df.iloc[index]['img'])
         mask = Image.open(self.df.iloc[index]['mask'])
 
-        img = TT.ToTensor()(img)
+        img = TT.ToTensor()(np.array(img, copy=True))
         mask = (TT.PILToTensor()(mask) / 255).long()
 
         # if self.mode == 'train':
