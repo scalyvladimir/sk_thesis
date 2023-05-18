@@ -234,8 +234,8 @@ class GAN(pl.LightningModule):
 
     def configure_optimizers(self):
 
-        opt_g = torch.optim.Adam(itertools.chain(self.gen_A.parameters(), self.gen_B.parameters()), betas=(0.5, 0.999), lr=0.0002)
-        opt_d = torch.optim.Adam(itertools.chain(self.disc_A.parameters(), self.disc_B.parameters()), betas=(0.5, 0.999), lr=0.0002)
+        opt_g = torch.optim.Adam(itertools.chain(self.gen_A.parameters(), self.gen_B.parameters()), betas=(0.5, 0.999), lr=0.00001)
+        opt_d = torch.optim.Adam(itertools.chain(self.disc_A.parameters(), self.disc_B.parameters()), betas=(0.5, 0.999), lr=0.00001)
 
         milestones = [self.trainer.max_epochs // 2]
 
